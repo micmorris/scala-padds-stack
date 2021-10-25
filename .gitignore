@@ -1,0 +1,8 @@
+*.class
+*.log
+.bsp
+.idea
+target/
+rootkey*
+*-install/
+.DS_Store
