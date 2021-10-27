@@ -1,5 +1,7 @@
 # The PADDS Stack
 
+![Scala PADDS Logo (courtesy of https://logodesign.net)](scala-padds.png?raw=true)
+
 An opinionated example stack using Protobuf, Akka, Docker, DynamoDB, and Scala.
 
 ## Summary

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package com.padds.example.proto.v1.service;
+option go_package = "com/padds/example/proto/v1/service";
+
+import "com/padds/example/proto/v1/request/PaddingRequest.proto";
+import "com/padds/example/proto/v1/response/PaddingResponse.proto";
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/protobuf/empty.proto";
+
+
+service PaddsService {
+
+  // v1 OrderPadding
+  rpc OrderPadding(com.padds.example.proto.v1.request.OrderPaddingForPlayerRequest)
+      returns (com.padds.example.proto.v1.response.OrderPaddingForPlayerResponse) {
+    option (google.api.http) = {
+      post: "/v1/order/padding"
+      body: "*"
+    };
+    option (google.api.method_signature) = "POST /v1/order/padding";
+  }
+
+  // v1 GetPaddingOrder
+  rpc GetPaddingOrder(google.protobuf.Empty)
+      returns (com.padds.example.proto.v1.response.GetPaddingOrdersResponse) {
+    option (google.api.http) = {
+      get: "/v1/{name=orderId/*}"
+    };
+    option (google.api.method_signature) = "GET /v1/{name=orderId/*}";
+  }
+
+  // v1 GetPaddingOrders
+  rpc GetPaddingOrdersBatch(com.padds.example.proto.v1.request.GetPaddingOrdersRequest)
+      returns (com.padds.example.proto.v1.response.GetPaddingOrdersResponse) {
+    option (google.api.http) = {
+      post: "/v1/order/lookup"
+      body: "*"
+    };
+    option (google.api.method_signature) = "POST /v1/order/lookup";
+  }
+}

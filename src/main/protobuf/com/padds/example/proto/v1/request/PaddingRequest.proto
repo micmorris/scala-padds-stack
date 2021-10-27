@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.padds.example.proto.v1.request;
+
+option go_package = "com/padds/example/proto/v1/request";
+
+message OrderPaddingForPlayerRequest {
+  //UUID as string
+  string player_id = 1;
+  //UUID as string
+  string padding_id = 2;
+  //Amount to order
+  int32 qty = 3;
+}
+
+message GetPaddingOrdersRequest {
+  //UUIDs as strings
+  repeated string order_ids = 1;
+}
