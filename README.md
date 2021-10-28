@@ -133,3 +133,5 @@ npm install -g redoc-cli
 ```bash
 redoc-cli bundle -o src/main/resources/generated-html/openapi.html src/main/resources/generated-openapi/*
 ```
+
+

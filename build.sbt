@@ -26,6 +26,15 @@ Compile / PB.targets := Seq(
     .gen(flatPackage = true, javaConversions = false) -> (Compile / sourceManaged).value
 )
 
+// Compile Guardrail
+Compile / guardrailTasks := List(
+  ScalaServer(
+    baseDirectory.value / "src/main/resources/generated-openapi/openapi.yaml",
+    pkg = "com.padds.example.guardrail"
+  )
+)
+
+
 //TODO: Credentials
 //credentials += Credentials(Path.userHome / ".ivy2" / "credentials")
 //TODO: Publish Destination
@@ -78,6 +87,8 @@ lazy val akkaVersion = "2.6.16"
 lazy val prometheusVer = "0.12.0"
 lazy val pureConfigVer = "0.17.0"
 lazy val scalacticVersion = "3.2.9"
+lazy val catsVersion = "2.6.1"
+lazy val circeVersion = "0.14.1"
 
 lazy val root = (project in file(".")).settings(
   inThisBuild(List(organization := "micmorris", scalaVersion := "2.12.15")),
@@ -98,6 +109,10 @@ lazy val root = (project in file(".")).settings(
     "org.scalactic" %% "scalactic" % scalacticVersion,
     "com.github.pureconfig" %% "pureconfig-core" % pureConfigVer,
     "com.github.pureconfig" %% "pureconfig-generic" % pureConfigVer,
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser" % circeVersion,
+    "org.typelevel" %% "cats-core" % catsVersion,
     "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
     "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.1",
     "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2" % "protobuf",
