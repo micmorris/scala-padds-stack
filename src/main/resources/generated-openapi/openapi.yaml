@@ -61,6 +61,7 @@ paths:
 components:
     schemas:
         GetPaddingOrdersRequest:
+            type: object
             properties:
                 order_ids:
                     type: array
@@ -68,18 +69,21 @@ components:
                         type: string
                     description: UUIDs as strings
         GetPaddingOrdersResponse:
+            type: object
             properties:
                 failure_response:
                     $ref: '#/components/schemas/OrderFailure'
                 order_content_response:
                     $ref: '#/components/schemas/OrderContent'
         OrderContent:
+            type: object
             properties:
                 orders:
                     type: array
                     items:
                         $ref: '#/components/schemas/PaddingOrder'
         OrderFailure:
+            type: object
             properties:
                 failure_reason:
                     type: string
@@ -87,6 +91,7 @@ components:
                     type: integer
                     format: int32
         OrderPaddingForPlayerRequest:
+            type: object
             properties:
                 player_id:
                     type: string
@@ -99,16 +104,19 @@ components:
                     description: Amount to order
                     format: int32
         OrderPaddingForPlayerResponse:
+            type: object
             properties:
                 failure_response:
                     $ref: '#/components/schemas/OrderFailure'
                 order_success_response:
                     $ref: '#/components/schemas/OrderSuccess'
         OrderSuccess:
+            type: object
             properties:
                 order:
                     $ref: '#/components/schemas/PaddingOrder'
         PaddingOrder:
+            type: object
             properties:
                 order_id:
                     type: string

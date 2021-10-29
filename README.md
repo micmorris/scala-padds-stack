@@ -13,18 +13,18 @@ Backwards and forwards compatibility is a top concern for Proto and all librarie
 
 From these primitives, we generate a variety of useful things:
 
-- Proto => Linting and Backwards Compatibility (via [bufbuild](#1-protobuf-lintingbc-bufbuildbuf))
+- Proto => Linting and Backwards Compatibility (via [1. bufbuild](#1-protobuf-lintingbc-bufbuildbuf))
 
 
-- Proto => Scala Models + Json DeSer (via [ScalaPB and scalapb-json4s](#2-scala-models-wjson-scalapb--json4s))
+- Proto => Scala Models + Json DeSer (via [2. ScalaPB and scalapb-json4s](#2-scala-models-wjson-scalapb--json4s))
 
 
-- Proto => Models for Other Langs (example: Typescript via [ts-proto](#5-typescript-and-other-lang-generation-ts-proto))
-
-
-- Proto => OpenAPI YAML (via Google's [protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi))
-- OpenAPI YAML => OpenAPI HTML (via [redoc-cli](#4-html-generation-redoc-cli))
+- Proto => OpenAPI YAML (via Google's [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi))
+- OpenAPI YAML => OpenAPI HTML (via [4. redoc-cli](#4-html-generation-redoc-cli))
 - OpenAPI YAML => AkkaHttp Routes + Scala Models + DeSer (via twilio's guardrail)
+
+
+- Proto => Models for Other Langs (example: Typescript via [5. ts-proto](#5-typescript-and-other-lang-generation-ts-proto))
 
 
 - Scala Models => Avro Schema + DeSer (via avro4s)
@@ -86,7 +86,30 @@ JSON serialization is made automatic for single-line usage and Akka integration 
 
 #### Installation
 
-Add plugins to [plugins.sbt](project/plugins.sbt) and dependencies to [build.sbt](build.sbt).
+Add to [plugins.sbt](project/plugins.sbt):
+```scala
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.3")
+
+libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.11.5"
+```
+
+Add to [build.sbt](build.sbt):
+```scala
+import scalapb.compiler.Version.scalapbVersion
+
+// Compile ScalaPB and pull external_protobuf content
+Compile / PB.targets := Seq(
+  scalapb
+    .gen(flatPackage = true, javaConversions = false) -> (Compile / sourceManaged).value
+)
+
+libraryDependencies ++= Seq(
+    "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
+    "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.1",
+    "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2" % "protobuf",
+    "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2",
+)
+```
 
 ### 3. OpenAPI Generation (gnostic/protoc-gen-openapi)
 
@@ -99,6 +122,40 @@ and will output a single yaml file of all combined endpoints with referenced obj
 ```bash
 # Step 0: Install go. https://golang.org/doc/install
 go get github.com/google/gnostic
+go install github.com/google/gnostic/apps/protoc-gen-openapi@latest
+```
+
+##### Known Bug
+
+Based on the way `proto-gen-openapi` generates OpenAPI Yaml, it leaves off the `type` field on schemas.
+[6. Guardrail](#6-generated-akka-http-routes-twilios-guardrail) 
+doesn't like this very much and will fail to find any schemas. (Ignore this if not using Guardrail.)
+
+I've [opened an issue on gnostic](https://github.com/google/gnostic/issues/263),
+but in the meantime, you'll need to make this change yourself locally during installation?
+
+```bash
+go get github.com/google/gnostic
+vim $GOPATH/pkg/mod/github.com/google/gnostic@v0.5.6/apps/protoc-gen-openapi/generator/openapi-v3.go
+
+# Modify this section, currently at line 589-602
+#// Add the schema to the components.schema list.
+#d.Components.Schemas.AdditionalProperties = append(d.Components.Schemas.AdditionalProperties,
+#  &v3.NamedSchemaOrReference{
+#    Name: string(message.Desc.Name()),
+#    Value: &v3.SchemaOrReference{
+#      Oneof: &v3.SchemaOrReference_Schema{
+#        Schema: &v3.Schema{
+#          Description: messageDescription,
+#          Properties:  definitionProperties,
+#----------TODO: Add the below line!
+#          Type: "object",
+#        },
+#      },
+#    },
+#  },
+#)
+
 go install github.com/google/gnostic/apps/protoc-gen-openapi@latest
 ```
 
@@ -115,10 +172,12 @@ OPENAPI_DESTINATION="src/main/resources/generated-openapi"
 rm -rf ${OPENAPI_DESTINATION}
 mkdir -p ${OPENAPI_DESTINATION}
 
+# If your shell has ** wildcard expansion:
+
 protoc -Isrc/main/protobuf -Itarget/protobuf_external ${PROTOC_IMPORT_PATH}/**/service/*.proto --openapi_out=${OPENAPI_DESTINATION}
 
 # OR
-# If your shell doesn't have ** wildcard expansion:
+# If your shell DOESN'T have ** wildcard expansion:
 
 EXPANDED_SERVICE_PROTO=$(find ${PROTOC_IMPORT_PATH} -regex '.*/service/.*.proto' | tr '\n' ' ')
 protoc -Isrc/main/protobuf -Itarget/protobuf_external ${EXPANDED_SERVICE_PROTO} --openapi_out=${OPENAPI_DESTINATION}
@@ -148,7 +207,7 @@ redoc-cli bundle -o ${HTML_DESTINATION}/openapi.html src/main/resources/generate
 
 ### 5. Typescript and Other Lang Generation (ts-proto) 
 
-[ts-proto](https://www.npmjs.com/package/ts-proto) is used to create 
+[stephenh/ts-proto](https://github.com/stephenh/ts-proto) is used to create 
 Typescript and/or Javascript models from Protobuf files. This can be helpful when passing models
 to a browser app without having to worry about serialization across different languages.
 
@@ -175,4 +234,43 @@ TS_DESTINATION="./src/main/resources/generated-typescript"
 rm -rf ${TS_DESTINATION}
 mkdir -p ${TS_DESTINATION}
 protoc --proto_path="${PROTOC_IMPORT_PATH}" --proto_path="${PROTOC_EXTERNAL_IMPORT_PATH}" --ts_proto_opt=esModuleInterop=true,outputEncodeMethods=false,outputJsonMethods=false,outputClientImpl=false,useOptionals=true,unrecognizedEnum=false --ts_proto_out="${TS_DESTINATION}" $(find ${PROTOC_IMPORT_PATH} -iname "*.proto")
+```
+
+### 6. Generated Akka HTTP Routes (Twilio's Guardrail)
+
+[guardrail-dev/guardrail](https://github.com/guardrail-dev/guardrail) can generate source code for Scala
+based on the format of an OpenAPI yaml file.
+
+We'll use it in this case to generate Routes to be used by [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)
+
+These routes can be found in [PaddsGuardrailRoutes.scala](/src/main/scala/com/padds/example/routes/PaddsGuardrailRoutes.scala).
+
+#### Known Bug
+
+The dependency [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi) has a bug,
+see that section for a fix.
+
+#### Installation
+
+Add to [plugins.sbt](project/plugins.sbt):
+```scala
+addSbtPlugin("com.twilio" % "sbt-guardrail" % "0.64.0")
+```
+
+Add to [build.sbt](build.sbt):
+```scala
+// Compile Guardrail
+Compile / guardrailTasks := List(
+  ScalaServer(
+    baseDirectory.value / "src/main/resources/generated-openapi/openapi.yaml",
+    pkg = "com.padds.example.guardrail"
+  )
+)
+
+libraryDependencies ++= Seq(
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser" % circeVersion,
+    "org.typelevel" %% "cats-core" % catsVersion,
+)
 ```
