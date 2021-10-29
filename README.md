@@ -13,14 +13,17 @@ Backwards and forwards compatibility is a top concern for Proto and all librarie
 
 From these primitives, we generate a variety of useful things:
 
-- Proto => Linting and Backwards Compatibility (via bufbuild)
+- Proto => Linting and Backwards Compatibility (via [bufbuild](#1-protobuf-lintingbc-bufbuildbuf))
 
 
-- Proto => Scala Models + Json DeSer (via ScalaPB and scalapb-json4s)
+- Proto => Scala Models + Json DeSer (via [ScalaPB and scalapb-json4s](#2-scala-models-wjson-scalapb--json4s))
 
 
-- Proto => OpenAPI YAML (via Google's protoc-gen-openapi)
-- OpenAPI YAML => OpenAPI HTML (via redoc-cli)
+- Proto => Models for Other Langs (example: Typescript via [ts-proto](#5-typescript-and-other-lang-generation-ts-proto))
+
+
+- Proto => OpenAPI YAML (via Google's [protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi))
+- OpenAPI YAML => OpenAPI HTML (via [redoc-cli](#4-html-generation-redoc-cli))
 - OpenAPI YAML => AkkaHttp Routes + Scala Models + DeSer (via twilio's guardrail)
 
 
@@ -107,13 +110,18 @@ go install github.com/google/gnostic/apps/protoc-gen-openapi@latest
 sbt compile 
 mkdir -p src/main/resources/generated-openapi
 
-protoc -Isrc/main/protobuf -Itarget/protobuf_external src/main/protobuf/**/service/*.proto --openapi_out=src/main/resources/generated-openapi
+PROTOC_IMPORT_PATH="src/main/protobuf"
+OPENAPI_DESTINATION="src/main/resources/generated-openapi"
+rm -rf ${OPENAPI_DESTINATION}
+mkdir -p ${OPENAPI_DESTINATION}
+
+protoc -Isrc/main/protobuf -Itarget/protobuf_external ${PROTOC_IMPORT_PATH}/**/service/*.proto --openapi_out=${OPENAPI_DESTINATION}
 
 # OR
 # If your shell doesn't have ** wildcard expansion:
 
 EXPANDED_SERVICE_PROTO=$(find ${PROTOC_IMPORT_PATH} -regex '.*/service/.*.proto' | tr '\n' ' ')
-protoc -Isrc/main/protobuf -Itarget/protobuf_external ${EXPANDED_SERVICE_PROTO} --openapi_out=src/main/resources/generated-openapi
+protoc -Isrc/main/protobuf -Itarget/protobuf_external ${EXPANDED_SERVICE_PROTO} --openapi_out=${OPENAPI_DESTINATION}
 ```
 
 ### 4. HTML Generation (redoc-cli)
@@ -131,7 +139,40 @@ npm install -g redoc-cli
 #### Usage
 
 ```bash
-redoc-cli bundle -o src/main/resources/generated-html/openapi.html src/main/resources/generated-openapi/*
+# Make sure you've generated the OpenAPI yaml first!
+HTML_DESTINATION="src/main/resources/generated-html"
+rm -rf ${HTML_DESTINATION}
+mkdir -p ${HTML_DESTINATION}
+redoc-cli bundle -o ${HTML_DESTINATION}/openapi.html src/main/resources/generated-openapi/*
 ```
 
+### 5. Typescript and Other Lang Generation (ts-proto) 
 
+[ts-proto](https://www.npmjs.com/package/ts-proto) is used to create 
+Typescript and/or Javascript models from Protobuf files. This can be helpful when passing models
+to a browser app without having to worry about serialization across different languages.
+
+This can be a similar process for any language you want to interface with, the Proto community
+has support for many different languages and formats.
+
+#### Installation
+
+```bash
+# Step 0: install npm. https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+npm install -g ts-proto
+```
+
+#### Usage
+
+```bash
+# One-time: you need to run these for ScalaPB to pull external protos the first time, 
+# but they should stick around unless cleaned up, so it's not necessary every time
+sbt compile 
+
+PROTOC_IMPORT_PATH="./src/main/protobuf"
+PROTOC_EXTERNAL_IMPORT_PATH="./target/protobuf_external"
+TS_DESTINATION="./src/main/resources/generated-typescript"
+rm -rf ${TS_DESTINATION}
+mkdir -p ${TS_DESTINATION}
+protoc --proto_path="${PROTOC_IMPORT_PATH}" --proto_path="${PROTOC_EXTERNAL_IMPORT_PATH}" --ts_proto_opt=esModuleInterop=true,outputEncodeMethods=false,outputJsonMethods=false,outputClientImpl=false,useOptionals=true,unrecognizedEnum=false --ts_proto_out="${TS_DESTINATION}" $(find ${PROTOC_IMPORT_PATH} -iname "*.proto")
+```

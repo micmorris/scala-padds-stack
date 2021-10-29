@@ -61,7 +61,6 @@ paths:
 components:
     schemas:
         GetPaddingOrdersRequest:
-            type: object
             properties:
                 order_ids:
                     type: array
