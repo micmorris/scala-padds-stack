@@ -8,6 +8,7 @@ import scala.util.Try
 
 trait ProtoJsonProtocol {
 
+  // For AkkaHTTP Unmarshalling
   implicit def unmarshalProto[T <: GeneratedMessage : GeneratedMessageCompanion]
       : FromEntityUnmarshaller[T] = {
     Unmarshaller.stringUnmarshaller.map(JsonFormat.fromJsonString[T](_))

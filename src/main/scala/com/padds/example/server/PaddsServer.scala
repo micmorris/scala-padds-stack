@@ -11,7 +11,7 @@ import akka.stream.Materializer
 import com.padds.example.config.ServiceConfig
 import com.padds.example.metrics.PrometheusMetrics
 import com.padds.example.routes.PaddsRoutes
-import com.padds.example.service.PaddsService
+import com.padds.example.service.PaddsOperationService
 import fr.davit.akka.http.metrics.core.HttpMetrics._
 import fr.davit.akka.http.metrics.prometheus.PrometheusRegistry
 
@@ -28,7 +28,7 @@ object PaddsServer extends App with PaddsRoutes with ServiceConfig {
 
   override val metricsRegistry: PrometheusRegistry = PrometheusMetrics()
 
-  override val paddsService: PaddsService = new PaddsService()
+  override val paddsOperationService: PaddsOperationService = new PaddsOperationService()
 
   implicit def exceptionHandler: ExceptionHandler =
     ExceptionHandler {
@@ -47,7 +47,6 @@ object PaddsServer extends App with PaddsRoutes with ServiceConfig {
       metricsHandler = metricsRegistry
     )
     .bindFlow(routes)
-  log.info(s"Server online at http://${hostConfig.listeningHost.host}:${hostConfig.listeningHost.port}/")
 
   val shutdown = CoordinatedShutdown(system)
 
@@ -62,6 +61,8 @@ object PaddsServer extends App with PaddsRoutes with ServiceConfig {
       .flatMap(b => akka.pattern.after(5 seconds, system.scheduler)(b.terminate(1 minute)))
       .map(_ => Done)
   }
+
+  log.info(s"Server online at http://${hostConfig.listeningHost.host}:${hostConfig.listeningHost.port}/")
 
   Await.result(system.whenTerminated, Duration.Inf)
 

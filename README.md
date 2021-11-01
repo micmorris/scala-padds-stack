@@ -4,45 +4,49 @@
 
 An opinionated example stack using Protobuf, Akka, Docker, DynamoDB, and Scala.
 
-## Proto Ecosystems Description
+## Why Use the Proto Ecosystem?
 
-[Protobuf](https://developers.google.com/protocol-buffers) files are the core of all data models. 
-These can be consumed by `rpc` models in Proto to make a definition of how a server should accept the models.
-We can also just serialize the protobuf messages without an `rpc` object.
-Backwards and forwards compatibility is a top concern for Proto and all libraries utilizing it.
+[Protobuf](https://developers.google.com/protocol-buffers) files are the core of all data models. These can be
+consumed by `rpc` models in Proto to make a definition of how a server should accept the models. We can also
+just serialize the protobuf messages without an `rpc` object. Backwards and forwards compatibility is a top
+concern for Proto and all libraries utilizing it.
 
 From these primitives, we generate a variety of useful things:
 
 - Proto => Linting and Backwards Compatibility (via [1. bufbuild](#1-protobuf-lintingbc-bufbuildbuf))
 
 
-- Proto => Scala Models + Json DeSer (via [2. ScalaPB and scalapb-json4s](#2-scala-models-wjson-scalapb--json4s))
+- Proto => Scala Models + Json DeSer (
+  via [2. ScalaPB and scalapb-json4s](#2-scala-models-wjson-scalapb--json4s))
 
 
-- Proto => OpenAPI YAML (via Google's [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi))
+- Proto => OpenAPI YAML (via
+  Google's [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi))
 - OpenAPI YAML => OpenAPI HTML (via [4. redoc-cli](#4-html-generation-redoc-cli))
-- OpenAPI YAML => AkkaHttp Routes + Scala Models + DeSer (via twilio's guardrail)
+- OpenAPI YAML => AkkaHttp Routes + Scala Models + DeSer (via 
+  [Twilio's guardrail](#6-generated-akka-http-routes-twilios-guardrail))
 
 
-- Proto => Models for Other Langs (example: Typescript via [5. ts-proto](#5-typescript-and-other-lang-generation-ts-proto))
+- Proto => Models for Other Langs (example: Typescript
+  via [5. ts-proto](#5-typescript-and-other-lang-generation-ts-proto))
 
 
-- Scala Models => Avro Schema + DeSer (via avro4s)
+- Scala Models => Avro Schema + DeSer (via [avro4s](#7-avro-schema-creation-avro4s))
 
 ## Tools
 
-### 1. Protobuf Linting/BC (bufbuild/buf) 
+### 1. Protobuf Linting/BC (bufbuild/buf)
 
-[Buf](https://buf.build/) is a project whose goal is to lint and verify that your Protobuf 
-files don't have backwards-incompatible changes. Protobuf loses a lot of its benefits
-if you don't adhere to its rules on versioning, and Buf is a way of enforcing those rules.
+[Buf](https://buf.build/) is a project whose goal is to lint and verify that your Protobuf files don't have
+backwards-incompatible changes. Protobuf loses a lot of its benefits if you don't adhere to its rules on
+versioning, and Buf is a way of enforcing those rules.
 
 #### buf.yaml
 
 In `src/main/protobuf` there's a `buf.yaml` file that dictates what rules to apply onto your `.proto` files.
-It has a dependency on `buf.build/googleapis/googleapis`, which is a project ID for a 
-[BSR](https://buf.build/product/bsr/) lock file that Buf will use 
-to lint our Google proto depedencies. (Similar if depending on an in-house depedency) 
+It has a dependency on `buf.build/googleapis/googleapis`, which is a project ID for a
+[BSR](https://buf.build/product/bsr/) lock file that Buf will use to lint our Google proto depedencies. (
+Similar if depending on an in-house depedency)
 
 To refresh that lock file:
 
@@ -54,8 +58,8 @@ cd -
 
 #### buf.work.yaml
 
-A top-level file that points to all protobuf directories in this project. Enables running buf commands
-at the root of the project instead of inside `src/main/protobuf`.
+A top-level file that points to all protobuf directories in this project. Enables running buf commands at the
+root of the project instead of inside `src/main/protobuf`.
 
 #### Installation
 
@@ -77,16 +81,17 @@ buf breaking --against ".git#tag=${PREV_VER}"
 
 ### 2. Scala Models w/Json (ScalaPB / Json4s)
 
-[ScalaPB](https://scalapb.github.io/) is a project to translate Protobuf into Scala Case Classes.
-It uses [scalapb-json4s](https://github.com/scalapb/scalapb-json4s) to DeSer JSON models from the generated
-case classes. 
+[ScalaPB](https://scalapb.github.io/) is a project to translate Protobuf into Scala Case Classes. It
+uses [scalapb-json4s](https://github.com/scalapb/scalapb-json4s) to DeSer JSON models from the generated case
+classes.
 
-JSON serialization is made automatic for single-line usage and Akka integration via 
+JSON serialization is made automatic for single-line usage and Akka integration via
 [ProtoJsonProtocol.scala](src/main/scala/com/padds/example/json/ProtoJsonProtocol.scala).
 
 #### Installation
 
 Add to [plugins.sbt](project/plugins.sbt):
+
 ```scala
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.3")
 
@@ -94,6 +99,7 @@ libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.11.5"
 ```
 
 Add to [build.sbt](build.sbt):
+
 ```scala
 import scalapb.compiler.Version.scalapbVersion
 
@@ -104,18 +110,18 @@ Compile / PB.targets := Seq(
 )
 
 libraryDependencies ++= Seq(
-    "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
-    "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.1",
-    "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2" % "protobuf",
-    "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2",
+  "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
+  "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.1",
+  "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2" % "protobuf",
+  "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2"
 )
 ```
 
 ### 3. OpenAPI Generation (gnostic/protoc-gen-openapi)
 
 [protoc-gen-openapi](https://github.com/google/gnostic/tree/master/apps/protoc-gen-openapi)
-is for making OpenAPI yaml from the proto files. It needs to be pointed at the service files 
-and will output a single yaml file of all combined endpoints with referenced objects.
+is for making OpenAPI yaml from the proto files. It needs to be pointed at the service files and will output a
+single yaml file of all combined endpoints with referenced objects.
 
 #### Installation
 
@@ -128,11 +134,11 @@ go install github.com/google/gnostic/apps/protoc-gen-openapi@latest
 ##### Known Bug
 
 Based on the way `proto-gen-openapi` generates OpenAPI Yaml, it leaves off the `type` field on schemas.
-[6. Guardrail](#6-generated-akka-http-routes-twilios-guardrail) 
+[6. Guardrail](#6-generated-akka-http-routes-twilios-guardrail)
 doesn't like this very much and will fail to find any schemas. (Ignore this if not using Guardrail.)
 
-I've [opened an issue on gnostic](https://github.com/google/gnostic/issues/263),
-but in the meantime, you'll need to make this change yourself locally during installation?
+I've [opened an issue on gnostic](https://github.com/google/gnostic/issues/263), but in the meantime, you'll
+need to make this change yourself locally during installation?
 
 ```bash
 go get github.com/google/gnostic
@@ -147,9 +153,9 @@ vim $GOPATH/pkg/mod/github.com/google/gnostic@v0.5.6/apps/protoc-gen-openapi/gen
 #      Oneof: &v3.SchemaOrReference_Schema{
 #        Schema: &v3.Schema{
 #          Description: messageDescription,
-#          Properties:  definitionProperties,
 #----------TODO: Add the below line!
 #          Type: "object",
+#          Properties:  definitionProperties,
 #        },
 #      },
 #    },
@@ -185,8 +191,8 @@ protoc -Isrc/main/protobuf -Itarget/protobuf_external ${EXPANDED_SERVICE_PROTO} 
 
 ### 4. HTML Generation (redoc-cli)
 
-[redoc-cli](https://www.npmjs.com/package/redoc-cli) is used to generate HTML to view and navigate
-your OpenAPI docs.
+[redoc-cli](https://www.npmjs.com/package/redoc-cli) is used to generate HTML to view and navigate your
+OpenAPI docs.
 
 #### Installation
 
@@ -205,14 +211,14 @@ mkdir -p ${HTML_DESTINATION}
 redoc-cli bundle -o ${HTML_DESTINATION}/openapi.html src/main/resources/generated-openapi/*
 ```
 
-### 5. Typescript and Other Lang Generation (ts-proto) 
+### 5. Typescript and Other Lang Generation (ts-proto)
 
-[stephenh/ts-proto](https://github.com/stephenh/ts-proto) is used to create 
-Typescript and/or Javascript models from Protobuf files. This can be helpful when passing models
-to a browser app without having to worry about serialization across different languages.
+[stephenh/ts-proto](https://github.com/stephenh/ts-proto) is used to create Typescript and/or Javascript
+models from Protobuf files. This can be helpful when passing models to a browser app without having to worry
+about serialization across different languages.
 
-This can be a similar process for any language you want to interface with, the Proto community
-has support for many different languages and formats.
+This can be a similar process for any language you want to interface with, the Proto community has support for
+many different languages and formats.
 
 #### Installation
 
@@ -238,26 +244,33 @@ protoc --proto_path="${PROTOC_IMPORT_PATH}" --proto_path="${PROTOC_EXTERNAL_IMPO
 
 ### 6. Generated Akka HTTP Routes (Twilio's Guardrail)
 
-[guardrail-dev/guardrail](https://github.com/guardrail-dev/guardrail) can generate source code for Scala
-based on the format of an OpenAPI yaml file.
+Twilio's announcement of the project: 
+[Introducing Twilio’s guardrail](https://www.twilio.com/blog/2018/03/twilio-guardrail-type-safe-principled.html)
 
-We'll use it in this case to generate Routes to be used by [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)
+[guardrail-dev/guardrail](https://github.com/guardrail-dev/guardrail) can generate source code for Scala based
+on the format of an OpenAPI yaml file.
 
-These routes can be found in [PaddsGuardrailRoutes.scala](/src/main/scala/com/padds/example/routes/PaddsGuardrailRoutes.scala).
+We'll use it in this case to generate Routes to be used
+by [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)
+
+These routes can be found
+in [PaddsGuardrailRoutes.scala](/src/main/scala/com/padds/example/routes/PaddsGuardrailRoutes.scala).
 
 #### Known Bug
 
-The dependency [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi) has a bug,
-see that section for a fix.
+The dependency [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi) has a bug, see that
+section for a fix.
 
 #### Installation
 
 Add to [plugins.sbt](project/plugins.sbt):
+
 ```scala
 addSbtPlugin("com.twilio" % "sbt-guardrail" % "0.64.0")
 ```
 
 Add to [build.sbt](build.sbt):
+
 ```scala
 // Compile Guardrail
 Compile / guardrailTasks := List(
@@ -268,9 +281,67 @@ Compile / guardrailTasks := List(
 )
 
 libraryDependencies ++= Seq(
-    "io.circe" %% "circe-core" % circeVersion,
-    "io.circe" %% "circe-generic" % circeVersion,
-    "io.circe" %% "circe-parser" % circeVersion,
-    "org.typelevel" %% "cats-core" % catsVersion,
+  "io.circe" %% "circe-core" % circeVersion,
+  "io.circe" %% "circe-generic" % circeVersion,
+  "io.circe" %% "circe-parser" % circeVersion,
+  "org.typelevel" %% "cats-core" % catsVersion
 )
 ```
+
+See [PaddsGuardrailRoutes.scala](src/main/scala/com/padds/example/routes/PaddsRoutes.scala)
+for implementation.
+
+### 7. Avro Schema Creation (avro4s)
+
+COMING SOON!
+
+### 8. Deployment (docker, Docker for Desktop, and  docker-compose)
+
+COMING SOON!
+
+## Deployment
+
+```bash
+sbt test docker:publishLocal
+
+docker-compose down
+docker-compose up
+```
+
+MORE COMING SOON!
+
+### Example Requests
+
+#### New Order
+
+```bash
+# Akka + ScalaPb
+curl http://localhost:8080/akka-scalapb/v1/order/padding -H "Content-Type: application/json" -d '{"playerId":"1ce91e38-4601-4354-ad1b-2c5c1c70da1a","paddingId":"f766cfce-6edd-4e89-aa78-f3018212080f","qty":1}'
+
+# Guardrail
+curl http://localhost:8080/guardrail/v1/order/padding -H "Content-Type: application/json" -d '{"player_id":"1ce91e38-4601-4354-ad1b-2c5c1c70da1a","padding_id":"f766cfce-6edd-4e89-aa78-f3018212080f","qty":1}'
+```
+
+#### Get Order by ID
+
+```bash
+# Akka + ScalaPb
+curl -X GET http://localhost:8080/akka-scalapb/v1/orderId/1ce91e38-4601-4354-ad1b-2c5c1c70da1a
+
+# Guardrail
+curl -X GET http://localhost:8080/guardrail/v1/orderId/1ce91e38-4601-4354-ad1b-2c5c1c70da1a
+```
+
+#### Get Batch of Orders
+
+```bash
+# Akka + ScalaPb
+curl http://localhost:8080/akka-scalapb/v1/order/lookup -H "Content-Type: application/json" -d '{"orderIds":["1ce91e38-4601-4354-ad1b-2c5c1c70da1a", "f766cfce-6edd-4e89-aa78-f3018212080f"]}'
+
+# Guardrail
+curl http://localhost:8080/guardrail/v1/order/lookup -H "Content-Type: application/json" -d '{"order_ids":["1ce91e38-4601-4354-ad1b-2c5c1c70da1a", "f766cfce-6edd-4e89-aa78-f3018212080f"]}'
+```
+
+
+
+
