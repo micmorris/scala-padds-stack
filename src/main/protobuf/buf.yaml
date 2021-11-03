@@ -1,0 +1,11 @@
+version: v1
+name: buf.build/micmorris/scala-padds-stack
+deps:
+  - buf.build/googleapis/googleapis #Needed to lint the helper protos we ingest from Google
+lint:
+  use:
+    - BASIC
+    - PACKAGE_SAME_GO_PACKAGE # For generating OpenAPI yaml through Go
+breaking:
+  use:
+    - FILE # Use WIRE_JSON if this is too strict

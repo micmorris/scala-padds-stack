@@ -1,0 +1,133 @@
+# Generated with protoc-gen-openapi
+# https://github.com/googleapis/gnostic/tree/master/apps/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: PaddsService
+    version: 0.0.1
+paths:
+    /v1/order/lookup:
+        post:
+            summary: v1 GetPaddingOrders
+            operationId: PaddsService_GetPaddingOrdersBatch
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/GetPaddingOrdersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetPaddingOrdersResponse'
+    /v1/order/padding:
+        post:
+            summary: v1 OrderPadding
+            operationId: PaddsService_OrderPadding
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/OrderPaddingForPlayerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/OrderPaddingForPlayerResponse'
+    /v1/orderId/{orderId}:
+        get:
+            summary: v1 GetPaddingOrder
+            operationId: PaddsService_GetPaddingOrder
+            parameters:
+                - name: orderId
+                  in: path
+                  description: The orderId id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetPaddingOrdersResponse'
+components:
+    schemas:
+        GetPaddingOrdersRequest:
+            type: object
+            properties:
+                order_ids:
+                    type: array
+                    items:
+                        type: string
+                    description: UUIDs as strings
+        GetPaddingOrdersResponse:
+            type: object
+            properties:
+                failure_response:
+                    $ref: '#/components/schemas/OrderFailure'
+                order_content_response:
+                    $ref: '#/components/schemas/OrderContent'
+        OrderContent:
+            type: object
+            properties:
+                orders:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/PaddingOrder'
+        OrderFailure:
+            type: object
+            properties:
+                failure_reason:
+                    type: string
+                failure_id:
+                    type: integer
+                    format: int32
+        OrderPaddingForPlayerRequest:
+            type: object
+            properties:
+                player_id:
+                    type: string
+                    description: UUID as string
+                padding_id:
+                    type: string
+                    description: UUID as string
+                qty:
+                    type: integer
+                    description: Amount to order
+                    format: int32
+        OrderPaddingForPlayerResponse:
+            type: object
+            properties:
+                failure_response:
+                    $ref: '#/components/schemas/OrderFailure'
+                order_success_response:
+                    $ref: '#/components/schemas/OrderSuccess'
+        OrderSuccess:
+            type: object
+            properties:
+                order:
+                    $ref: '#/components/schemas/PaddingOrder'
+        PaddingOrder:
+            type: object
+            properties:
+                order_id:
+                    type: string
+                    description: UUID as string
+                player_id:
+                    type: string
+                    description: UUID as string
+                padding_id:
+                    type: string
+                    description: UUID as string
+                order_placed_epoch:
+                    type: integer
+                    description: When the order was placed as epoch seconds
+                    format: int64

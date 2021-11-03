@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package com.padds.example.proto.v1.response;
+
+option go_package = "com/padds/example/proto/v1/response";
+
+import "com/padds/example/proto/v1/common/PaddingModel.proto";
+
+message OrderPaddingForPlayerResponse {
+  oneof response_option {
+      OrderFailure failure_response = 1;
+      OrderSuccess order_success_response = 2;
+  }
+}
+
+message OrderSuccess {
+  com.padds.example.proto.v1.common.PaddingOrder order = 1;
+}
+
+message OrderFailure {
+  string failure_reason = 1;
+  int32 failure_id = 2;
+}
+
+
+message GetPaddingOrdersResponse {
+  oneof response_option {
+    OrderFailure failure_response = 1;
+    OrderContent order_content_response = 2;
+  }
+}
+
+message OrderContent {
+  repeated com.padds.example.proto.v1.common.PaddingOrder orders = 1;
+}

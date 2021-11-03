@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package com.padds.example.proto.v1.common;
+
+option go_package = "com/padds/example/proto/v1/common";
+
+message PaddingOrder {
+  //UUID as string
+  string order_id = 1;
+  //UUID as string
+  string player_id = 2;
+  //UUID as string
+  string padding_id = 3;
+  //When the order was placed as epoch seconds
+  int64 order_placed_epoch = 4;
+}
+
+message Padding {
+  //UUID as string
+  string padding_id = 1;
+  //Type of padding
+  PaddingType padding_type = 2;
+}
+
+enum PaddingType {
+  NO_PADDING = 0;
+  SHOULDER_PADS = 1;
+  SHIN_GUARDS = 2;
+  GLOVES = 3;
+  ELBOW_PADS = 4;
+}
