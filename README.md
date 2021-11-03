@@ -6,10 +6,19 @@ An opinionated example stack using Protobuf, Akka, Docker, DynamoDB, and Scala.
 
 ## Why Use the Proto Ecosystem?
 
-[Protobuf](https://developers.google.com/protocol-buffers) files are the core of all data models. These can be
-consumed by `rpc` models in Proto to make a definition of how a server should accept the models. We can also
-just serialize the protobuf messages without an `rpc` object. Backwards and forwards compatibility is a top
-concern for Proto and all libraries utilizing it.
+[Protobuf](https://developers.google.com/protocol-buffers) files can be the core of all data models. 
+These can be consumed by `rpc` models in Proto to make a definition of how a server should accept the models. 
+We can also just serialize the protobuf messages without an `rpc` object. 
+
+
+[Backwards and forwards compatibility](https://yokota.blog/2021/08/26/understanding-protobuf-compatibility/) 
+is a top concern for Proto and Google has detailed docs on 
+[how to safely update message with a new field](https://developers.google.com/protocol-buffers/docs/proto3#updating). 
+
+Proto3 also supports 
+[canonical JSON encoding](https://developers.google.com/protocol-buffers/docs/proto3#json) 
+meaning that regardless of the client you use to turn Proto into different models, 
+they can still communicate with each other over JSON. 
 
 From these primitives, we generate a variety of useful things:
 
@@ -256,10 +265,16 @@ by [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)
 These routes can be found
 in [PaddsGuardrailRoutes.scala](/src/main/scala/com/padds/example/routes/PaddsGuardrailRoutes.scala).
 
-#### Known Bug
+#### Known Problems
 
-The dependency [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi) has a bug, see that
+- Guardrail only supports deserializing `snake_case` and not `camelCase` JSON values, 
+which means it's not a valid Proto3 client 
+[by Google's definition](https://developers.google.com/protocol-buffers/docs/proto3#json_options)
+- The dependency [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi) has a bug, see that
 section for a fix.
+
+Based on these things, as well as considering the flexibility of ScalaPB, 
+I personally do not advocate using Guardrail for anything but the simplest of applications.
 
 #### Installation
 

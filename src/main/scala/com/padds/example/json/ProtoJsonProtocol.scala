@@ -8,6 +8,9 @@ import scala.util.Try
 
 trait ProtoJsonProtocol {
 
+  // This will output snake_case fields in JSON output string
+  implicit private val scalaPbPrinter = new scalapb.json4s.Printer().preservingProtoFieldNames
+
   // For AkkaHTTP Unmarshalling
   implicit def unmarshalProto[T <: GeneratedMessage : GeneratedMessageCompanion]
       : FromEntityUnmarshaller[T] = {
@@ -17,7 +20,10 @@ trait ProtoJsonProtocol {
   implicit class ProtoSerializer[T <: GeneratedMessage : GeneratedMessageCompanion](
       proto: T
   ) {
-    def serializeProtoIntoJson: String = JsonFormat.toJsonString(proto)
+
+    def serializeProtoIntoJson: String = {
+      scalaPbPrinter.print(proto)
+    }
   }
 
   implicit class ProtoDeserializer(protoJson: String) {
