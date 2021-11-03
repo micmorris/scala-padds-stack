@@ -217,7 +217,7 @@ trait PaddsRoutes extends MetricTiming with ProtoJsonProtocol {
           HttpResponse(
             entity = HttpEntity(
               ContentTypes.`application/json`,
-              value.serializeProtoIntoJson
+              value.serializeProtoToJson
             ),
             status = StatusCodes.OK
           )
