@@ -27,20 +27,22 @@ From these primitives, we generate a variety of useful things:
 
 - Proto => Scala Models + Json DeSer (
   via [2. ScalaPB and scalapb-json4s](#2-scala-models-wjson-scalapb--json4s))
+- Proto => Validations (via [3. Validation](#3-validation-scalapb-validate--protoc-gen-validate))
 
 
 - Proto => OpenAPI YAML (via
-  Google's [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi))
-- OpenAPI YAML => OpenAPI HTML (via [4. redoc-cli](#4-html-generation-redoc-cli))
-- OpenAPI YAML => AkkaHttp Routes + Scala Models + DeSer (via 
-  [Twilio's guardrail](#6-generated-akka-http-routes-twilios-guardrail))
+  Google's [4. protoc-gen-openapi](#4-openapi-generation-gnosticprotoc-gen-openapi))
+- OpenAPI YAML => OpenAPI HTML (via [5. redoc-cli](#5-html-generation-redoc-cli))
 
 
 - Proto => Models for Other Langs (example: Typescript
-  via [5. ts-proto](#5-typescript-and-other-lang-generation-ts-proto))
+  via [6. ts-proto](#6-typescript-and-other-lang-generation-ts-proto))
 
 
-- Scala Models => Avro Schema + DeSer (via [avro4s](#7-avro-schema-creation-avro4s))
+- Scala Models => Avro Schema + DeSer (via [7. avro4s](#7-avro-schema-creation-avro4s))
+
+Finally, we package and deploy a running Scala service 
+via [8. Docker](#8-deployment-docker-docker-for-desktop-and--docker-compose)
 
 ## Tools
 
@@ -126,7 +128,11 @@ libraryDependencies ++= Seq(
 )
 ```
 
-### 3. OpenAPI Generation (gnostic/protoc-gen-openapi)
+### 3. Validation (ScalaPB-Validate / protoc-gen-validate)
+
+COMING SOON!
+
+### 4. OpenAPI Generation (gnostic/protoc-gen-openapi)
 
 [protoc-gen-openapi](https://github.com/google/gnostic/tree/master/apps/protoc-gen-openapi)
 is for making OpenAPI yaml from the proto files. It needs to be pointed at the service files and will output a
@@ -141,10 +147,6 @@ go install github.com/google/gnostic/apps/protoc-gen-openapi@latest
 ```
 
 ##### Known Bug
-
-Based on the way `proto-gen-openapi` generates OpenAPI Yaml, it leaves off the `type` field on schemas.
-[6. Guardrail](#6-generated-akka-http-routes-twilios-guardrail)
-doesn't like this very much and will fail to find any schemas. (Ignore this if not using Guardrail.)
 
 I've [opened an issue on gnostic](https://github.com/google/gnostic/issues/263), but in the meantime, you'll
 need to make this change yourself locally during installation?
@@ -198,7 +200,7 @@ EXPANDED_SERVICE_PROTO=$(find ${PROTOC_IMPORT_PATH} -regex '.*/service/.*.proto'
 protoc -Isrc/main/protobuf -Itarget/protobuf_external ${EXPANDED_SERVICE_PROTO} --openapi_out=${OPENAPI_DESTINATION}
 ```
 
-### 4. HTML Generation (redoc-cli)
+### 5. HTML Generation (redoc-cli)
 
 [redoc-cli](https://www.npmjs.com/package/redoc-cli) is used to generate HTML to view and navigate your
 OpenAPI docs.
@@ -220,7 +222,7 @@ mkdir -p ${HTML_DESTINATION}
 redoc-cli bundle -o ${HTML_DESTINATION}/openapi.html src/main/resources/generated-openapi/*
 ```
 
-### 5. Typescript and Other Lang Generation (ts-proto)
+### 6. Typescript and Other Lang Generation (ts-proto)
 
 [stephenh/ts-proto](https://github.com/stephenh/ts-proto) is used to create Typescript and/or Javascript
 models from Protobuf files. This can be helpful when passing models to a browser app without having to worry
@@ -251,61 +253,6 @@ mkdir -p ${TS_DESTINATION}
 protoc --proto_path="${PROTOC_IMPORT_PATH}" --proto_path="${PROTOC_EXTERNAL_IMPORT_PATH}" --ts_proto_opt=esModuleInterop=true,outputEncodeMethods=false,outputJsonMethods=false,outputClientImpl=false,useOptionals=true,unrecognizedEnum=false --ts_proto_out="${TS_DESTINATION}" $(find ${PROTOC_IMPORT_PATH} -iname "*.proto")
 ```
 
-### 6. Generated Akka HTTP Routes (Twilio's Guardrail)
-
-Twilio's announcement of the project: 
-[Introducing Twilio’s guardrail](https://www.twilio.com/blog/2018/03/twilio-guardrail-type-safe-principled.html)
-
-[guardrail-dev/guardrail](https://github.com/guardrail-dev/guardrail) can generate source code for Scala based
-on the format of an OpenAPI yaml file.
-
-We'll use it in this case to generate Routes to be used
-by [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)
-
-These routes can be found
-in [PaddsGuardrailRoutes.scala](/src/main/scala/com/padds/example/routes/PaddsGuardrailRoutes.scala).
-
-#### Known Problems
-
-- Guardrail only supports deserializing `snake_case` and not `camelCase` JSON values, 
-which means it's not a valid Proto3 client 
-[by Google's definition](https://developers.google.com/protocol-buffers/docs/proto3#json_options)
-- The dependency [3. protoc-gen-openapi](#3-openapi-generation-gnosticprotoc-gen-openapi) has a bug, see that
-section for a fix.
-
-Based on these things, as well as considering the flexibility of ScalaPB, 
-I personally do not advocate using Guardrail for anything but the simplest of applications.
-
-#### Installation
-
-Add to [plugins.sbt](project/plugins.sbt):
-
-```scala
-addSbtPlugin("com.twilio" % "sbt-guardrail" % "0.64.0")
-```
-
-Add to [build.sbt](build.sbt):
-
-```scala
-// Compile Guardrail
-Compile / guardrailTasks := List(
-  ScalaServer(
-    baseDirectory.value / "src/main/resources/generated-openapi/openapi.yaml",
-    pkg = "com.padds.example.guardrail"
-  )
-)
-
-libraryDependencies ++= Seq(
-  "io.circe" %% "circe-core" % circeVersion,
-  "io.circe" %% "circe-generic" % circeVersion,
-  "io.circe" %% "circe-parser" % circeVersion,
-  "org.typelevel" %% "cats-core" % catsVersion
-)
-```
-
-See [PaddsGuardrailRoutes.scala](src/main/scala/com/padds/example/routes/PaddsRoutes.scala)
-for implementation.
-
 ### 7. Avro Schema Creation (avro4s)
 
 COMING SOON!
@@ -330,31 +277,21 @@ MORE COMING SOON!
 #### New Order
 
 ```bash
-# Akka + ScalaPb
-curl http://localhost:8080/akka-scalapb/v1/order/padding -H "Content-Type: application/json" -d '{"playerId":"1ce91e38-4601-4354-ad1b-2c5c1c70da1a","paddingId":"f766cfce-6edd-4e89-aa78-f3018212080f","qty":1}'
-
-# Guardrail
-curl http://localhost:8080/guardrail/v1/order/padding -H "Content-Type: application/json" -d '{"player_id":"1ce91e38-4601-4354-ad1b-2c5c1c70da1a","padding_id":"f766cfce-6edd-4e89-aa78-f3018212080f","qty":1}'
+curl http://localhost:8080/akka-scalapb/v1/order/padding -H "Content-Type: application/json" \
+-d '{"playerId":"1ce91e38-4601-4354-ad1b-2c5c1c70da1a","paddingId":"f766cfce-6edd-4e89-aa78-f3018212080f","qty":1}'
 ```
 
 #### Get Order by ID
 
 ```bash
-# Akka + ScalaPb
 curl -X GET http://localhost:8080/akka-scalapb/v1/orderId/1ce91e38-4601-4354-ad1b-2c5c1c70da1a
-
-# Guardrail
-curl -X GET http://localhost:8080/guardrail/v1/orderId/1ce91e38-4601-4354-ad1b-2c5c1c70da1a
 ```
 
 #### Get Batch of Orders
 
 ```bash
-# Akka + ScalaPb
-curl http://localhost:8080/akka-scalapb/v1/order/lookup -H "Content-Type: application/json" -d '{"orderIds":["1ce91e38-4601-4354-ad1b-2c5c1c70da1a", "f766cfce-6edd-4e89-aa78-f3018212080f"]}'
-
-# Guardrail
-curl http://localhost:8080/guardrail/v1/order/lookup -H "Content-Type: application/json" -d '{"order_ids":["1ce91e38-4601-4354-ad1b-2c5c1c70da1a", "f766cfce-6edd-4e89-aa78-f3018212080f"]}'
+curl http://localhost:8080/akka-scalapb/v1/order/lookup -H "Content-Type: application/json" \
+-d '{"orderIds":["1ce91e38-4601-4354-ad1b-2c5c1c70da1a", "f766cfce-6edd-4e89-aa78-f3018212080f"]}'
 ```
 
 
