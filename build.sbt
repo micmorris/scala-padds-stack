@@ -109,6 +109,8 @@ lazy val root = (project in file(".")).settings(
     "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.1",
     "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2" % "protobuf",
     "com.thesamet.scalapb.common-protos" %% "proto-google-common-protos-scalapb_0.11" % "2.5.0-2",
+    "com.thesamet.scalapb" %% "scalapb-validate-core" % scalapb.validate.compiler.BuildInfo.version,
+    "com.thesamet.scalapb" %% "scalapb-validate-core" % scalapb.validate.compiler.BuildInfo.version % "protobuf",
     "org.scalactic" %% "scalactic" % scalacticVersion,
     "org.scalatest" %% "scalatest" % scalacticVersion % Test,
     "org.scalamock" %% "scalamock" % "5.1.0" % Test

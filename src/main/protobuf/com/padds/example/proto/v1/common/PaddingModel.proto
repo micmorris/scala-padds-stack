@@ -1,23 +1,32 @@
 syntax = "proto3";
 
 package com.padds.example.proto.v1.common;
-
 option go_package = "com/padds/example/proto/v1/common";
+
+import "validate/validate.proto";
 
 message PaddingOrder {
   //UUID as string
-  string order_id = 1;
+  string order_id = 1 [
+    (validate.rules).string.uuid = true
+  ];
   //UUID as string
-  string player_id = 2;
+  string player_id = 2 [
+    (validate.rules).string.uuid = true
+  ];
   //UUID as string
-  string padding_id = 3;
+  string padding_id = 3 [
+    (validate.rules).string.uuid = true
+  ];
   //When the order was placed as epoch seconds
   int64 order_placed_epoch = 4;
 }
 
 message Padding {
   //UUID as string
-  string padding_id = 1;
+  string padding_id = 1 [
+    (validate.rules).string.uuid = true
+  ];
   //Type of padding
   PaddingType padding_type = 2;
 }

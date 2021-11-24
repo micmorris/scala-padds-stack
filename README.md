@@ -277,20 +277,20 @@ MORE COMING SOON!
 #### New Order
 
 ```bash
-curl http://localhost:8080/akka-scalapb/v1/order/padding -H "Content-Type: application/json" \
+curl http://localhost:8080/v1/order/padding -H "Content-Type: application/json" \
 -d '{"playerId":"1ce91e38-4601-4354-ad1b-2c5c1c70da1a","paddingId":"f766cfce-6edd-4e89-aa78-f3018212080f","qty":1}'
 ```
 
 #### Get Order by ID
 
 ```bash
-curl -X GET http://localhost:8080/akka-scalapb/v1/orderId/1ce91e38-4601-4354-ad1b-2c5c1c70da1a
+curl -X GET http://localhost:8080/v1/orderId/1ce91e38-4601-4354-ad1b-2c5c1c70da1a
 ```
 
 #### Get Batch of Orders
 
 ```bash
-curl http://localhost:8080/akka-scalapb/v1/order/lookup -H "Content-Type: application/json" \
+curl http://localhost:8080/v1/order/lookup -H "Content-Type: application/json" \
 -d '{"orderIds":["1ce91e38-4601-4354-ad1b-2c5c1c70da1a", "f766cfce-6edd-4e89-aa78-f3018212080f"]}'
 ```
 

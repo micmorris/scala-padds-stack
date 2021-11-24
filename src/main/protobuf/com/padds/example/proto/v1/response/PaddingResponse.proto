@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package com.padds.example.proto.v1.response;
-
 option go_package = "com/padds/example/proto/v1/response";
 
 import "com/padds/example/proto/v1/common/PaddingModel.proto";

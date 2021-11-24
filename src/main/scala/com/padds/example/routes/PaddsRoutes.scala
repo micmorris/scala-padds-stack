@@ -38,10 +38,12 @@ trait PaddsRoutes extends MetricTiming with ProtoJsonProtocol {
 
   lazy val routes: Route = {
     concat(
-      (get & path("http-metrics")) {
-        metrics(metricsRegistry)
-      },
-      akkaHttpRoutes
+      akkaHttpRoutes,
+      path("http-metrics") {
+        get {
+          metrics(metricsRegistry)
+        }
+      }
     )
   }
 
