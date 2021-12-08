@@ -90,9 +90,9 @@ class ProtoJsonProtocolSpec extends AnyWordSpec with Matchers with ProtoJsonProt
           // Json => Proto
           val resultProto = protoModel match {
             case _: OrderPaddingForPlayerRequest =>
-              jsonString.deserializeJsonIntoProto[OrderPaddingForPlayerRequest]
+              jsonString.jsonToProto[OrderPaddingForPlayerRequest]
             case _: GetPaddingOrdersRequest =>
-              jsonString.deserializeJsonIntoProto[GetPaddingOrdersRequest]
+              jsonString.jsonToProto[GetPaddingOrdersRequest]
             case _ =>
               throw new Exception("You probably have to add the new possible types to this test")
           }
@@ -100,9 +100,9 @@ class ProtoJsonProtocolSpec extends AnyWordSpec with Matchers with ProtoJsonProt
 
           // Proto => Json
           val resultJson = if (isSnakeCase) {
-            protoModel.serializeProtoToJson_SnakeCase
+            protoModel.protoToSnakeCaseJson
           } else {
-            protoModel.serializeProtoToJson
+            protoModel.protoToJson
           }
 
           //Use circe to parse both strings and make sure they're both compact and sorted

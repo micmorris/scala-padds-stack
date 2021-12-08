@@ -2,7 +2,6 @@ package com.padds.example.routes
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
@@ -131,13 +130,7 @@ trait PaddsRoutes extends MetricTiming with ProtoJsonProtocol {
     onComplete(response) {
       case Success(value) =>
         complete(
-          HttpResponse(
-            entity = HttpEntity(
-              ContentTypes.`application/json`,
-              value.serializeProtoToJson
-            ),
-            status = StatusCodes.OK
-          )
+          value
         )
       case Failure(exception) => ??? //TODO: Show exception handling for Akka
     }
