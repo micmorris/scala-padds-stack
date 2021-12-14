@@ -46,6 +46,15 @@ via [8. Docker](#8-deployment-docker-docker-for-desktop-and--docker-compose)
 
 ## Tools
 
+### 0. Protobuf/Protoc
+
+#### Installation
+
+```bash
+#macOS
+brew install protobuf
+```
+
 ### 1. Protobuf Linting/BC (bufbuild/buf)
 
 [Buf](https://buf.build/) is a project whose goal is to lint and verify that your Protobuf files don't have
@@ -76,8 +85,7 @@ root of the project instead of inside `src/main/protobuf`.
 
 ```bash
 #macOS
-brew tap bufbuild/buf
-brew install buf
+brew install bufbuild/buf/buf
 ```
 
 #### Usage
